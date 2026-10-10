@@ -32,7 +32,7 @@ import {
 import { mapFirestoreError } from './errors.js';
 import { inferCollection } from './infer.js';
 import { parseSettings, type FirestoreSettings } from './settings.js';
-import { needsScan, matchesFilter, sortRecords } from './scan.js';
+import { mustScan, matchesFilter, sortRecords } from './scan.js';
 import {
   assertValidDocumentId,
   compileFind,
@@ -153,7 +153,7 @@ export class FirestoreAdapter implements Adapter {
   ): Promise<FindResult> {
     const offset = readOffset(position);
     const handle = this.connected();
-    if (needsScan(collection, query.filter)) {
+    if (mustScan(collection, query)) {
       return this.scan(collection, query, offset);
     }
     const spec = compileFind(collection, query, filterApi(handle));

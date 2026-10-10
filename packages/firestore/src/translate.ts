@@ -307,6 +307,54 @@ export function compileFilter(
   }
 }
 
+/**
+ * Fields the compiled query filters with an inequality (<, <=, >, >=, !=, not-in, prefix range).
+ * Firestore only accepts such a query when its first sort is on that same field.
+ */
+export function inequalityFields(
+  collection: CollectionDefinition,
+  filter: Filter | undefined,
+): string[] {
+  const found = new Set<string>();
+  const visit = (node: Filter): void => {
+    if ('and' in node) {
+      node.and.forEach(visit);
+      return;
+    }
+    if ('or' in node) {
+      node.or.forEach(visit);
+      return;
+    }
+    if ('not' in node) {
+      visit(negate(node.not));
+      return;
+    }
+    const name = storedName(collection, node.field);
+    switch (node.op) {
+      case 'lt':
+      case 'lte':
+      case 'gt':
+      case 'gte':
+      case 'startsWith':
+      case 'ne':
+      case 'nin':
+        found.add(name);
+        break;
+      case 'exists':
+        if (node.value !== false) {
+          found.add(name);
+        }
+        break;
+      default:
+        break;
+    }
+  };
+  if (filter) {
+    visit(filter);
+  }
+  return [...found];
+}
+
 export interface FindSpec {
   filter: unknown | undefined;
   orderBy: Array<[string, 'asc' | 'desc']>;
@@ -327,6 +375,18 @@ export function compileFind(
     fieldOf(collection, sort.field);
     return [storedName(collection, sort.field), sort.dir];
   });
+  // With no sort asked for, lead with the one inequality field so Firestore accepts the query
+  // (a query that sorts by something else is answered by a scan instead, see mustScan).
+  const ranged = inequalityFields(collection, query.filter);
+  const lead = ranged[0];
+  if (
+    ranged.length === 1 &&
+    lead !== undefined &&
+    !query.sort?.length &&
+    orderBy[0]?.[0] !== lead
+  ) {
+    orderBy.unshift([lead, 'asc']);
+  }
   let select: string[] | undefined;
   if (query.projection) {
     select = [];

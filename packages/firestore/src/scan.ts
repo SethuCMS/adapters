@@ -16,7 +16,7 @@ import {
   type Query,
 } from '@sethucms/core';
 import type { RecordData } from '@sethucms/adapter-sdk';
-import { negate } from './translate.js';
+import { inequalityFields, negate, storedName } from './translate.js';
 
 export function needsScan(
   collection: CollectionDefinition,
@@ -56,6 +56,31 @@ export function needsScan(
     return (filter.value as unknown[]).some((item) => item !== null);
   }
   return false;
+}
+
+/**
+ * Answer by scanning when Firestore cannot run the query as written: text search, null-safe
+ * not-equal, or an inequality filter combined with a sort on a different field (or several
+ * inequality fields), which Firestore refuses.
+ */
+export function mustScan(
+  collection: CollectionDefinition,
+  query: Query,
+): boolean {
+  if (needsScan(collection, query.filter)) {
+    return true;
+  }
+  const ranged = inequalityFields(collection, query.filter);
+  if (ranged.length === 0) {
+    return false;
+  }
+  if (ranged.length > 1) {
+    return true;
+  }
+  const first = query.sort?.[0];
+  return (
+    first !== undefined && storedName(collection, first.field) !== ranged[0]
+  );
 }
 
 function compare(a: unknown, b: unknown): number {
