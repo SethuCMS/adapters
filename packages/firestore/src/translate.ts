@@ -15,21 +15,14 @@ import {
 } from '@sethucms/core';
 import type { RecordData } from '@sethucms/adapter-sdk';
 
-/** A raw Firestore document body. */
 export type Doc = Record<string, unknown>;
 
 /** Firestore's name for the document id in queries. */
 export const DOC_ID = '__name__';
 
-// Firestore limits: at most 30 values in `in`, 10 in `not-in`. Beyond
-// that we refuse rather than silently split the query.
 const MAX_IN = 30;
 const MAX_NOT_IN = 10;
 
-/**
- * The name a field has in a query: the primary key is the document id,
- * which Firestore addresses as `__name__`.
- */
 export function storedName(
   collection: CollectionDefinition,
   field: string,
@@ -37,10 +30,6 @@ export function storedName(
   return field === primaryKeyOf(collection).name ? DOC_ID : field;
 }
 
-/**
- * Look up a field by name; unknown names are rejected so only fields from
- * the collection definition can appear in a query.
- */
 function fieldOf(
   collection: CollectionDefinition,
   name: string,
@@ -94,12 +83,6 @@ export function assertStorable(value: unknown, depth = 0): void {
   }
 }
 
-/**
- * Convert a portable value to its Firestore form. Dates stay as text
- * ("YYYY-MM-DD") since that sorts correctly; datetimes become Dates;
- * binary is decoded from base64; integers must be safe (Firestore stores
- * doubles above 2^53 lossy).
- */
 export function toStored(field: FieldDefinition, value: unknown): unknown {
   if (value === null || value === undefined) {
     return null;
@@ -124,10 +107,6 @@ export function toStored(field: FieldDefinition, value: unknown): unknown {
   }
 }
 
-/**
- * Convert a stored value to the portable form: Timestamps and Dates as ISO
- * strings, bytes as base64, document references as their path.
- */
 export function fromStored(field: FieldDefinition, value: unknown): unknown {
   if (value === null || value === undefined) {
     return null;
@@ -177,10 +156,6 @@ export function toRecord(
   return record;
 }
 
-/**
- * Portable values -> document body. The key is omitted: it is the
- * document id, not a field.
- */
 export function toDocument(
   collection: CollectionDefinition,
   values: RecordData,
@@ -200,18 +175,12 @@ export function toDocument(
 // Filters
 // ---------------------------------------------------------------------------
 
-// The slice of the driver's `Filter` class used for composite conditions;
-// injected so this module needs no driver import and is easy to test.
 interface DriverFilter {
   where(field: string, op: string, value: unknown): unknown;
   and(...filters: unknown[]): unknown;
   or(...filters: unknown[]): unknown;
 }
 
-/**
- * Filter values must be scalars, so a caller cannot pass an object that the
- * driver might interpret specially.
- */
 function scalar(value: unknown): unknown {
   if (value !== null && typeof value === 'object') {
     throw errors.validation('Filter values must be plain values');
@@ -220,10 +189,7 @@ function scalar(value: unknown): unknown {
 }
 
 /** NOT, pushed down to the comparisons (De Morgan), because Firestore has no general NOT. */
-// Pushing NOT down via De Morgan's laws is the only way to express it:
-// Firestore has no general NOT. Ops without an inverse (contains,
-// startsWith) are refused instead of approximated.
-function negate(filter: Filter): Filter {
+export function negate(filter: Filter): Filter {
   if ('and' in filter) {
     return { or: filter.and.map(negate) };
   }
@@ -253,10 +219,6 @@ function negate(filter: Filter): Filter {
   return { ...filter, op: op as never };
 }
 
-/**
- * Compile a portable {@link Filter} to Firestore composite filters built
- * with `F`. Anything Firestore cannot express throws CAPABILITY_UNSUPPORTED.
- */
 export function compileFilter(
   collection: CollectionDefinition,
   filter: Filter,
@@ -278,7 +240,6 @@ export function compileFilter(
 
   const field = fieldOf(collection, filter.field);
   const name = storedName(collection, filter.field);
-  // The primary key compares against the document id, which is always text.
   const convert = (raw: unknown) =>
     name === DOC_ID ? String(scalar(raw)) : toStored(field, scalar(raw));
   const value = filter.value;
@@ -299,8 +260,6 @@ export function compileFilter(
       return F.where(name, '>', convert(value));
     case 'gte':
       return F.where(name, '>=', convert(value));
-    // `in`/`nin` need null handled apart: Firestore's `in` cannot match null.
-    // Each branch re-adds null so results equal the SQL adapters'.
     case 'in':
     case 'nin': {
       const list = value as unknown[];
@@ -334,8 +293,6 @@ export function compileFilter(
       throw errors.unsupported(
         'Firestore cannot search inside text. Use "startsWith", or an exact match',
       );
-    // Firestore has no prefix operator; the standard trick is a range from
-    // the prefix up to the prefix plus a high code point. Case-sensitive.
     case 'startsWith': {
       const prefix = String(value);
       return F.and(
@@ -350,18 +307,12 @@ export function compileFilter(
   }
 }
 
-/** The pieces of a Firestore query compiled from a portable query. */
 export interface FindSpec {
   filter: unknown | undefined;
   orderBy: Array<[string, 'asc' | 'desc']>;
   select: string[] | undefined;
 }
 
-/**
- * Compile a portable {@link Query}. The key is appended to the ordering as
- * a tie-breaker so offset paging is stable. Projection never selects the
- * key: it is returned with every document anyway.
- */
 export function compileFind(
   collection: CollectionDefinition,
   query: Query,

@@ -16,12 +16,8 @@ import {
   type Query,
 } from '@sethucms/core';
 import type { RecordData } from '@sethucms/adapter-sdk';
+import { negate } from './translate.js';
 
-/**
- * Does this filter contain a text "contains"? Firestore cannot run it
- * natively, so the adapter must fall back to a scan. (Array "contains" is
- * native `array-contains`.)
- */
 export function needsScan(
   collection: CollectionDefinition,
   filter: Filter | undefined,
@@ -36,27 +32,38 @@ export function needsScan(
     return filter.or.some((child) => needsScan(collection, child));
   }
   if ('not' in filter) {
-    return needsScan(collection, filter.not);
+    // NOT is pushed down to the comparisons, so judge the filter the database would really get.
+    let pushed: Filter | undefined;
+    try {
+      pushed = negate(filter.not);
+    } catch {
+      pushed = undefined;
+    }
+    return needsScan(collection, pushed ?? filter.not);
   }
-  return (
-    filter.op === 'contains' &&
-    collection.fields.find((field) => field.name === filter.field)?.type !==
+  if (filter.op === 'contains') {
+    return (
+      collection.fields.find((field) => field.name === filter.field)?.type !==
       'array'
-  );
+    );
+  }
+  // Firestore rejects the OR (not-equal) and the AND/OR (not-in) that "null-safe" matching needs,
+  // so those are answered by reading the collection, exactly as the SQL adapters would.
+  if (filter.op === 'ne') {
+    return filter.value !== null;
+  }
+  if (filter.op === 'nin') {
+    return (filter.value as unknown[]).some((item) => item !== null);
+  }
+  return false;
 }
 
-// Callers guarantee both sides have the same primitive type, so a plain
-// `<` comparison is well defined.
 function compare(a: unknown, b: unknown): number {
   const x = a as number | string | boolean;
   const y = b as number | string | boolean;
   return x < y ? -1 : x > y ? 1 : 0;
 }
 
-/**
- * Evaluate a portable filter against one record in memory, mirroring the
- * SQL adapters' null semantics so scan results equal what SQL would return.
- */
 export function matchesFilter(filter: Filter, record: RecordData): boolean {
   if ('and' in filter) {
     return filter.and.every((child) => matchesFilter(child, record));
@@ -70,8 +77,6 @@ export function matchesFilter(filter: Filter, record: RecordData): boolean {
 
   const value = record[filter.field] ?? null;
   const target = filter.value;
-  // Ordering comparisons never match nulls or mismatched types (SQL
-  // three-valued logic: unknown is not true).
   const comparable =
     value !== null && target !== null && typeof value === typeof target;
 
