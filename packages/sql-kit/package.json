@@ -1,0 +1,49 @@
+{
+  "name": "@sethucms/adapter-sql-kit",
+  "version": "0.1.0",
+  "description": "Shared SQL building blocks for the SethuCMS SQL adapters (PostgreSQL, MySQL, SQLite)",
+  "author": "Kasinadh Sarma",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SethuCMS/sethucms-adapters.git",
+    "directory": "packages/sql-kit"
+  },
+  "homepage": "https://github.com/SethuCMS/sethucms-adapters#readme",
+  "bugs": {
+    "url": "https://github.com/SethuCMS/sethucms-adapters/issues"
+  },
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist/src"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test dist/tests/*.test.js",
+    "prepack": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sethucms/adapter-sdk": "^0.1.0",
+    "@sethucms/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

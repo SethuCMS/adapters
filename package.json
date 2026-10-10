@@ -1,0 +1,21 @@
+{
+  "name": "sethucms-adapters",
+  "private": true,
+  "version": "0.0.0",
+  "description": "First-party database adapters for SethuCMS",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "pnpm": {
+    "overrides": {
+      "@sethucms/core": "link:../sethucms/packages/core",
+      "@sethucms/adapter-sdk": "link:../sethucms-adapter-sdk"
+    }
+  }
+}
