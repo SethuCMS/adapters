@@ -11,6 +11,18 @@ import { join } from 'node:path';
 import { defineCollection, parseQuery, isSethuError } from '@sethucms/core';
 import { SqliteAdapter, parseSettings, mapSqliteType } from '../src/index.js';
 
+// node:sqlite arrived in Node 22.5, so these tests are skipped on older Node.
+const [nodeMajor = 0, nodeMinor = 0] = process.versions.node
+  .split('.')
+  .map(Number);
+const hasNodeSqlite = nodeMajor > 22 || (nodeMajor === 22 && nodeMinor >= 5);
+const sqliteTest = (name: string, run: () => Promise<void>) =>
+  test(
+    name,
+    { skip: !hasNodeSqlite && 'needs Node 22.5+ (node:sqlite)' },
+    run,
+  );
+
 // Builds the ConnectInput the adapter expects; SQLite needs no credentials.
 const input = (config: Record<string, unknown>, readOnly = false) => ({
   connectionId: 'c',
@@ -96,7 +108,7 @@ const books = defineCollection({
   ],
 });
 
-test('creates tables, reads them back with types and foreign keys, and round-trips every type', async () => {
+sqliteTest('creates tables, reads them back with types and foreign keys, and round-trips every type', async () => {
   const adapter = await open();
   await adapter.createCollection(authors);
   await adapter.createCollection(books);
@@ -159,7 +171,7 @@ test('creates tables, reads them back with types and foreign keys, and round-tri
   await adapter.close();
 });
 
-test('createCollection refuses an existing table, and a read-only connection', async () => {
+sqliteTest('createCollection refuses an existing table, and a read-only connection', async () => {
   const adapter = await open();
   await adapter.createCollection(authors);
   await assert.rejects(
@@ -189,7 +201,7 @@ test('createCollection refuses an existing table, and a read-only connection', a
   }
 });
 
-test('explicit ids are kept and unique violations become CONFLICT', async () => {
+sqliteTest('explicit ids are kept and unique violations become CONFLICT', async () => {
   const adapter = await open();
   await adapter.createCollection(authors);
   const created = await adapter.create(authors, { id: 42, name: 'x' });
@@ -202,7 +214,7 @@ test('explicit ids are kept and unique violations become CONFLICT', async () => 
   await adapter.close();
 });
 
-test('errors never include table names, SQL or file paths', async () => {
+sqliteTest('errors never include table names, SQL or file paths', async () => {
   const adapter = await open();
   await adapter.createCollection(authors);
   try {

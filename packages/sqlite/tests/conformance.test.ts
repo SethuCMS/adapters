@@ -12,8 +12,20 @@ import {
 } from '@sethucms/adapter-sdk/testing';
 import { SqliteAdapter } from '../src/index.js';
 
+// node:sqlite arrived in Node 22.5, so these tests are skipped on older Node.
+const [nodeMajor = 0, nodeMinor = 0] = process.versions.node
+  .split('.')
+  .map(Number);
+const hasNodeSqlite = nodeMajor > 22 || (nodeMajor === 22 && nodeMinor >= 5);
+const sqliteTest = (name: string, run: () => Promise<void>) =>
+  test(
+    name,
+    { skip: !hasNodeSqlite && 'needs Node 22.5+ (node:sqlite)' },
+    run,
+  );
+
 for (const where of ['memory', 'file'] as const) {
-  defineConformanceSuite(test, {
+  defineConformanceSuite(sqliteTest, {
     label: `sqlite (${where})`,
     async prepare({ readOnly }) {
       const dir = mkdtempSync(join(tmpdir(), 'sethucms-sqlite-'));

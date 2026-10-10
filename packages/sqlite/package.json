@@ -6,12 +6,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SethuCMS/sethucms-adapters.git",
+    "url": "git+https://github.com/SethuCMS/adapters.git",
     "directory": "packages/sqlite"
   },
-  "homepage": "https://github.com/SethuCMS/sethucms-adapters#readme",
+  "homepage": "https://github.com/SethuCMS/adapters#readme",
   "bugs": {
-    "url": "https://github.com/SethuCMS/sethucms-adapters/issues"
+    "url": "https://github.com/SethuCMS/adapters/issues"
   },
   "type": "module",
   "main": "./dist/src/index.js",
