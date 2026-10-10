@@ -25,8 +25,8 @@ importers:
         specifier: ^7.10.0
         version: 7.11.6
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
@@ -41,8 +41,8 @@ importers:
         version: link:../../../sethucms/packages/core
     devDependencies:
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
@@ -57,8 +57,8 @@ importers:
         version: link:../../../sethucms/packages/core
     devDependencies:
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       mongodb:
         specifier: ^6.9.0
         version: 6.21.0
@@ -79,11 +79,11 @@ importers:
         version: link:../../../sethucms/packages/core
     devDependencies:
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       mysql2:
         specifier: ^3.11.0
-        version: 3.24.5(@types/node@22.20.5)
+        version: 3.24.5(@types/node@26.6.4)
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
@@ -101,8 +101,8 @@ importers:
         version: link:../../../sethucms/packages/core
     devDependencies:
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       pg:
         specifier: ^8.13.0
         version: 8.23.1
@@ -120,8 +120,8 @@ importers:
         version: link:../../../sethucms/packages/core
     devDependencies:
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
@@ -139,8 +139,8 @@ importers:
         version: link:../../../sethucms/packages/core
     devDependencies:
       '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+        specifier: ^26.6.4
+        version: 26.6.4
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
@@ -212,8 +212,8 @@ packages:
   '@types/long@4.0.2':
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
-  '@types/node@22.20.5':
-    resolution: {integrity: sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA==}
+  '@types/node@26.6.4':
+    resolution: {integrity: sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg==}
 
   '@types/request@2.48.13':
     resolution: {integrity: sha512-FGJ6udDNUCjd19pp0Q3iTiDkwhYup7J8hpMW9c4k53NrccQFFWKRho6hvtPPEhnXWKvukfwAlB6DbDz4yhH5Gg==}
@@ -660,8 +660,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -774,14 +774,14 @@ snapshots:
 
   '@types/long@4.0.2': {}
 
-  '@types/node@22.20.5':
+  '@types/node@26.6.4':
     dependencies:
-      undici-types: 6.21.0
+      undici-types: 8.9.0
 
   '@types/request@2.48.13':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.6
 
@@ -1083,9 +1083,9 @@ snapshots:
 
   ms@2.1.3: {}
 
-  mysql2@3.24.5(@types/node@22.20.5):
+  mysql2@3.24.5(@types/node@26.6.4):
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       aws-ssl-profiles: 1.1.2
       generate-function: 2.3.1
       iconv-lite: 0.7.3
@@ -1168,7 +1168,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       long: 5.3.2
 
   punycode@2.3.1: {}
@@ -1243,7 +1243,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  undici-types@6.21.0: {}
+  undici-types@8.9.0: {}
 
   util-deprecate@1.0.2: {}
 
