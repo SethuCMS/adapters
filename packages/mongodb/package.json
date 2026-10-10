@@ -40,12 +40,12 @@
     "@sethucms/core": "^0.1.0"
   },
   "peerDependencies": {
-    "mongodb": "^6.9.0"
+    "mongodb": "^7.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0",
-    "mongodb": "^6.9.0"
+    "mongodb": "^7.7.0"
   },
   "publishConfig": {
     "access": "public"
