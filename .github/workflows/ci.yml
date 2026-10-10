@@ -56,9 +56,9 @@ jobs:
         working-directory: sethucms-adapter-sdk
       - run: pnpm install --no-frozen-lockfile
         working-directory: sethucms-adapters
-      - run: pnpm typecheck
-        working-directory: sethucms-adapters
       - run: pnpm build
+        working-directory: sethucms-adapters
+      - run: pnpm typecheck
         working-directory: sethucms-adapters
       - run: pnpm test
         working-directory: sethucms-adapters
