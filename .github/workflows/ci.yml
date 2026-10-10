@@ -42,7 +42,7 @@ jobs:
           repository: SethuCMS/adapter-sdk
           path: sethucms-adapter-sdk
           token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.0
       - uses: actions/setup-node@v4
@@ -99,7 +99,7 @@ jobs:
           repository: SethuCMS/adapter-sdk
           path: sethucms-adapter-sdk
           token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.0
       - uses: actions/setup-node@v4
