@@ -6,6 +6,9 @@ import { SethuError, errors, isSethuError } from '@sethucms/core';
  * status codes (5 NOT_FOUND, 6 ALREADY_EXISTS, 7 PERMISSION_DENIED, ...);
  * only that number is read, never the message.
  */
+/** Start of the message mapFirestoreError gives when Firestore refuses a query (gRPC FAILED_PRECONDITION). */
+export const NEEDS_INDEX = 'Firestore needs an index for this query';
+
 export function mapFirestoreError(error: unknown): SethuError {
   if (isSethuError(error)) {
     return error;
@@ -32,8 +35,17 @@ export function mapFirestoreError(error: unknown): SethuError {
     // FAILED_PRECONDITION: usually "query needs a composite index". Report
     // it as unsupported with advice, since SethuCMS cannot create indexes.
     case 9:
+      // The raw message names the query and often carries the one-click index link. It never goes
+      // to the client; it is written to the server log only, so the owner can see what Firestore wants.
+      console.error(
+        JSON.stringify({
+          level: 'warn',
+          event: 'firestore.failed_precondition',
+          detail: String((error as { message?: unknown }).message ?? '').slice(0, 1500),
+        }),
+      );
       return errors.unsupported(
-        'Firestore needs an index for this query. Create it in the Firebase console, or filter and sort differently',
+        `${NEEDS_INDEX}. Create it in the Firebase console, or filter and sort differently`,
       );
     case 4:
       return errors.timeout('The database took too long to respond');

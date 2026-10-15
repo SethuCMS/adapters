@@ -62,3 +62,19 @@ test('a sort on another field, or several range fields, is answered by a scan', 
   const notEqual = q({ filter: { field: 'n', op: 'ne', value: 1 } });
   assert.equal(mustScan(notes, notEqual), true);
 });
+
+// "Newest first" must not need a hand-made composite index: the id tie-break follows the sort direction.
+test('the id tie-break follows the direction of the last sort', () => {
+  const newest = q({ sort: [{ field: 'title', dir: 'desc' }] });
+  assert.deepEqual(compileFind(notes, newest, F).orderBy, [
+    ['title', 'desc'],
+    ['__name__', 'desc'],
+  ]);
+  const oldest = q({ sort: [{ field: 'title', dir: 'asc' }] });
+  assert.deepEqual(compileFind(notes, oldest, F).orderBy, [
+    ['title', 'asc'],
+    ['__name__', 'asc'],
+  ]);
+  const none = q();
+  assert.deepEqual(compileFind(notes, none, F).orderBy, [['__name__', 'asc']]);
+});

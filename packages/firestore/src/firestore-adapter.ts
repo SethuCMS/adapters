@@ -29,10 +29,17 @@ import {
   type FirestoreClientFactory,
   type FirestoreHandle,
 } from './client.js';
-import { mapFirestoreError } from './errors.js';
+import { NEEDS_INDEX, mapFirestoreError } from './errors.js';
 import { inferCollection } from './infer.js';
 import { parseSettings, type FirestoreSettings } from './settings.js';
 import { mustScan, matchesFilter, sortRecords } from './scan.js';
+import {
+  loadFileBytes,
+  loadFileMeta,
+  removeFile,
+  saveFile,
+  type FileMeta,
+} from './files.js';
 import {
   assertValidDocumentId,
   compileFind,
@@ -157,6 +164,24 @@ export class FirestoreAdapter implements Adapter {
       return this.scan(collection, query, offset);
     }
     const spec = compileFind(collection, query, filterApi(handle));
+    // If Firestore refuses the query (usually a missing composite index), answer it with the
+    // bounded scan instead of failing the page. Slower, but exact, and still capped.
+    try {
+      return await this.findIndexed(collection, query, offset, spec);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith(NEEDS_INDEX)) {
+        return this.scan(collection, query, offset);
+      }
+      throw error;
+    }
+  }
+
+  private async findIndexed(
+    collection: CollectionDefinition,
+    query: Query,
+    offset: number,
+    spec: ReturnType<typeof compileFind>,
+  ): Promise<FindResult> {
     return this.run(async () => {
       let q = this.collectionOf(collection);
       if (spec.filter) {
@@ -210,7 +235,9 @@ export class FirestoreAdapter implements Adapter {
       const matching = sortRecords(
         collection,
         query,
-        all.filter((record) => matchesFilter(query.filter!, record)),
+        all.filter((record) =>
+          query.filter ? matchesFilter(query.filter, record) : true,
+        ),
       );
       const page = matching.slice(offset, offset + query.page.limit);
       const project = (record: RecordData) =>
@@ -377,6 +404,51 @@ export class FirestoreAdapter implements Adapter {
           .set({ definition: JSON.stringify(collection) }),
       );
     });
+  }
+
+  // ---- Files (images, PDFs) kept in this Firestore; see files.ts -------------
+
+  /** Store a file and return its description (with the new id). */
+  async putFile(
+    input: { name: string; contentType: string },
+    data: Uint8Array,
+  ): Promise<FileMeta> {
+    this.assertWritable();
+    return this.run(() =>
+      this.limit(saveFile(this.connected().db, input, data)),
+    );
+  }
+
+  /** Describe a stored file, or null when there is none (or the id is malformed). */
+  async getFileMeta(id: string): Promise<FileMeta | null> {
+    return this.run(async () => {
+      const found = await this.limit(loadFileMeta(this.connected().db, id));
+      if (!found) {
+        return null;
+      }
+      const { parts: _parts, ...meta } = found;
+      return meta;
+    });
+  }
+
+  /** A stored file with its bytes, checked for damage; null when there is none. */
+  async readFile(id: string): Promise<{ meta: FileMeta; data: Buffer } | null> {
+    return this.run(async () => {
+      const { db } = this.connected();
+      const found = await this.limit(loadFileMeta(db, id));
+      if (!found) {
+        return null;
+      }
+      const data = await this.limit(loadFileBytes(db, found));
+      const { parts: _parts, ...meta } = found;
+      return { meta, data };
+    });
+  }
+
+  /** Delete a stored file. Returns false when there was none. */
+  async deleteFile(id: string): Promise<boolean> {
+    this.assertWritable();
+    return this.run(() => this.limit(removeFile(this.connected().db, id)));
   }
 
   // Integer ids raise the counter as they are created, so there is nothing to repair afterwards.

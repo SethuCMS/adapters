@@ -369,7 +369,10 @@ export function compileFind(
   const key = primaryKeyOf(collection).name;
   const sorts = [...(query.sort ?? [])];
   if (!sorts.some((sort) => sort.field === key)) {
-    sorts.push({ field: key, dir: 'asc' });
+    // Tie-break on the id in the same direction as the last sort. Firestore's automatic
+    // single-field indexes cover "field desc, id desc" but not "field desc, id asc", which
+    // would need a composite index created by hand.
+    sorts.push({ field: key, dir: sorts[sorts.length - 1]?.dir ?? 'asc' });
   }
   const orderBy = sorts.map((sort): [string, 'asc' | 'desc'] => {
     fieldOf(collection, sort.field);

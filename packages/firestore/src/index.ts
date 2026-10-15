@@ -18,3 +18,9 @@ export {
   assertStorable,
 } from './translate.js';
 export { mapFirestoreError } from './errors.js';
+export {
+  MAX_FILE_BYTES,
+  PART_BYTES,
+  isFileId,
+  type FileMeta,
+} from './files.js';
