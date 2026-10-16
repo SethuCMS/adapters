@@ -410,7 +410,7 @@ export class FirestoreAdapter implements Adapter {
 
   /** Store a file and return its description (with the new id). */
   async putFile(
-    input: { name: string; contentType: string },
+    input: { name: string; contentType: string; access?: 'public' | 'private' },
     data: Uint8Array,
   ): Promise<FileMeta> {
     this.assertWritable();

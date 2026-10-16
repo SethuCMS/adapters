@@ -32,6 +32,8 @@ export interface FileMeta {
   size: number;
   sha256: string;
   createdAt: string;
+  /** "private" files are only served to signed-in callers. Missing means public. */
+  access: 'public' | 'private';
 }
 
 /** Ids are 22 URL-safe characters (16 random bytes). Anything else is "no such file". */
@@ -46,7 +48,7 @@ const clean = (text: string, max: number): string =>
 /** Save a file. Returns its description, including the new id. */
 export async function saveFile(
   db: any,
-  input: { name: string; contentType: string },
+  input: { name: string; contentType: string; access?: 'public' | 'private' },
   data: Uint8Array,
 ): Promise<FileMeta> {
   if (data.byteLength === 0) {
@@ -70,6 +72,7 @@ export async function saveFile(
     size: data.byteLength,
     sha256: createHash('sha256').update(data).digest('hex'),
     createdAt: new Date().toISOString(),
+    access: input.access === 'private' ? 'private' : 'public',
   };
   const parts = Math.ceil(data.byteLength / PART_BYTES);
   const written: string[] = [];
@@ -99,6 +102,7 @@ export async function saveFile(
         sha256: meta.sha256,
         parts,
         createdAt: meta.createdAt,
+        access: meta.access,
       });
   } catch (error) {
     // Do not leave orphan parts behind.
@@ -144,6 +148,8 @@ export async function loadFileMeta(
     size: raw['size'],
     sha256: raw['sha256'],
     createdAt: raw['createdAt'],
+    // Files saved before this field existed are public, as they always were.
+    access: raw['access'] === 'private' ? 'private' : 'public',
     parts,
   };
 }

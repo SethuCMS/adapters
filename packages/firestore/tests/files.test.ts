@@ -118,3 +118,18 @@ test('file collections never show up as content', async () => {
   await adapter.putFile({ name: 'a.png', contentType: 'image/png' }, png);
   assert.deepEqual((await adapter.introspect()).map((c) => c.name), []);
 });
+
+test('a private file keeps its flag, and old files without one read as public', async () => {
+  const { adapter } = await open();
+  const secret = await adapter.putFile(
+    { name: 'a.pdf', contentType: 'application/pdf', access: 'private' },
+    Buffer.from('%PDF-1.4 x'),
+  );
+  assert.equal(secret.access, 'private');
+  assert.equal((await adapter.getFileMeta(secret.id))?.access, 'private');
+  const open1 = await adapter.putFile(
+    { name: 'b.png', contentType: 'image/png' },
+    Buffer.from('x'),
+  );
+  assert.equal(open1.access, 'public');
+});
