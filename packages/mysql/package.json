@@ -41,12 +41,12 @@
     "@sethucms/core": "^0.1.0"
   },
   "peerDependencies": {
-    "mysql2": "^3.11.0"
+    "mysql2": "^3.24.6"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0",
-    "mysql2": "^3.11.0"
+    "mysql2": "^3.24.6"
   },
   "publishConfig": {
     "access": "public"
